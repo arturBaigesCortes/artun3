@@ -1,0 +1,21 @@
+{
+  "publish": {
+    "Enabled": true,
+    "ProjectConfig": {
+      "Title": "Tama\u00F1o",
+      "Type": "jpg",
+      "Org": "local",
+      "Ident": "tama\u00F1o",
+      "Schema": 0,
+      "IncludeSourceFiles": false,
+      "Resources": null,
+      "PackageReferences": null,
+      "EditorReferences": null,
+      "Mounts": null,
+      "IsStandaloneOnly": false,
+      "Metadata": {
+        "SingleAssetSource": "textures/items/tama\u00F1o.png"
+      }
+    }
+  }
+}

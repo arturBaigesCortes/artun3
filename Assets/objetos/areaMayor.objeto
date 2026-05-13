@@ -1,0 +1,15 @@
+{
+  "Name": "Amplificador de anzuelo",
+  "Description": "Aumenta el tamaño del puntero para que perder a tu presa sea mas dificil",
+  "IconPath": "textures/items/mayor.png",
+  "Price": 350,
+  "Type": "PassiveArea",
+  "MaxDurability": 8,
+  "SprintSpeedMultiplier": 1.8,
+  "SprintDuration": 2,
+  "CaptureBoostAmount": 0.25,
+  "RechargeTime": 4,
+  "AreaMultiplier": 1.5,
+  "__references": [],
+  "__version": 0
+}

@@ -1,0 +1,236 @@
+@using Sandbox;
+@using Sandbox.UI;
+@using System;
+@using System.Linq;
+@inherits PanelComponent
+
+<root class="fishing-ui @(Event != null && Event.IsActive && Vector2.Distance(Event.PlayerPos, Event.FishPos) > 0.18f ? "danger-pulse" : "")"
+      style="display: @(Event != null && Event.IsActive ? "flex" : "none"); animation-duration: @(Event != null ? 0.4f + Event.CaptureProgress * 1.6f : 2.0f)s">
+
+    @if ( Event != null )
+    {
+        // --- LÓGICA DE TAMAÑO DINÁMICO ---
+        var inv = Scene.GetAllComponents<ItemInventory>().FirstOrDefault();
+        var item = inv?.SelectedItem;
+        
+        // El multiplicador viene del objeto. Si no hay objeto o no es de área, es 1.0f
+        float areaMult = (item?.Type == ItemType.PassiveArea) ? item.AreaMultiplier : 1.0f;
+        
+        // Base original era 90px. Ahora escala con el objeto.
+        float finalSize = 90f * areaMult;
+        bool isPassive = item?.Type == ItemType.PassiveArea;
+
+        bool isBlinking = Event.IsPreBlinking || (Event.IsCloneActive && Event.CloneLifeTimer < 0.15f);
+        bool isBoss = Event.CurrentFish != null && Event.CurrentFish.IsBoss;
+        string fishImg = isBoss ? "/textures/items/fish-red-icon.png" : "/textures/items/fish-blue-icon.png";
+
+        <div class="fishing-box">
+
+            <div class="fish-wrapper @(isBlinking ? "hidden" : "")"
+                 style="left: @(Event.FishPos.x * 100)%; top: @(Event.FishPos.y * 100)%;">
+                <img class="fish-img" src="@fishImg" />
+            </div>
+
+            @if ( Event.IsCloneActive && !isBlinking )
+            {
+                <div class="fish-wrapper"
+                     style="left: @(Event.ClonePos.x * 100)%; top: @(Event.ClonePos.y * 100)%; opacity: 0.88;">
+                    <img class="fish-img" src="@fishImg" />
+                </div>
+            }
+
+            <div class="capture-pointer @(isPassive ? "is-passive" : "")" 
+                 style="left: @(Event.PlayerPos.x * 100)%; 
+                        top: @(Event.PlayerPos.y * 100)%; 
+                        width: @(finalSize)px; 
+                        height: @(finalSize)px;">
+                <div class="corner tl"></div>
+                <div class="corner tr"></div>
+                <div class="corner bl"></div>
+                <div class="corner br"></div>
+                <div class="center-dot"></div>
+            </div>
+
+        </div>
+
+        <div class="bars-area">
+            <div class="progress-bar @(Event.CaptureProgress < 0.25f ? (isBoss ? "boss-shake" : "normal-shake") : "")">
+                <div class="progress-fill @(isBoss ? "boss-fill" : "") @(Event.CaptureProgress < 0.25f ? "critical-blink" : "")" 
+                    style="width: @(Event.CaptureProgress * 100)%">
+                </div>
+            </div>
+
+            @if (Event.ShowStamina)
+            {
+                <div class="sprint-bar">
+                    <div class="sprint-fill @(Event.IsExhausted ? "exhausted" : "")"
+                        style="width: @(Event.StaminaEnergy * 100)%"></div>
+                </div>
+            }
+        </div>
+    }
+
+</root>
+
+<style>
+    .fishing-ui {
+        position: absolute;
+        left: 50%; top: 50%;
+        transform: translate(-50%, -50%);
+        width: 480px; height: 630px;
+        flex-direction: column;
+        align-items: center;
+        background-color: rgba(30, 30, 30, 0.85);
+        padding: 15px;
+        border-radius: 12px;
+    }
+
+    .danger-pulse {
+        animation: pulse-red infinite ease-in-out;
+    }
+
+    @@keyframes pulse-red {
+        0%   { background-color: rgba(30, 30, 30, 0.85); }
+        50%  { background-color: rgba(180, 0, 0, 0.5); }
+        100% { background-color: rgba(30, 30, 30, 0.85); }
+    }
+
+    .fishing-box {
+        width: 450px; height: 450px;
+        background: rgba(0, 0, 0, 0.4);
+        position: relative;
+        border: 4px solid white;
+        overflow: hidden;
+    }
+
+    .fish-wrapper {
+        position: absolute;
+        width: 48px; height: 48px;
+        transform: translate(-50%, -50%);
+        transition: opacity 0.05s ease; 
+    }
+
+    .fish-wrapper.hidden { opacity: 0; }
+    .fish-img { width: 100%; height: 100%; }
+
+    /* --- PUNTERO --- */
+    .capture-pointer {
+        position: absolute;
+        /* El tamaño se controla por Style Inline en el HTML superior */
+        transform: translate(-50%, -50%);
+    }
+
+    .corner {
+        position: absolute;
+        width: 21px; height: 21px;
+        border: 4px solid lime;
+    }
+
+    /* Color Amarillo para el objeto pasivo */
+    .capture-pointer.is-passive .corner {
+        border-color: #fcc051;
+    }
+    .capture-pointer.is-passive .center-dot {
+        background-color: #fcc051;
+    }
+
+    .tl { top: 0; left: 0; border-right: none; border-bottom: none; border-radius: 3px 0 0 0; }
+    .tr { top: 0; right: 0; border-left: none; border-bottom: none; border-radius: 0 3px 0 0; }
+    .bl { bottom: 0; left: 0; border-right: none; border-top: none; border-radius: 0 0 0 3px; }
+    .br { bottom: 0; right: 0; border-left: none; border-top: none; border-radius: 0 0 3px 0; }
+
+    .center-dot {
+        position: absolute;
+        left: 50%; top: 50%;
+        width: 8px; height: 8px;
+        background: lime;
+        border-radius: 100%;
+        transform: translate(-50%, -50%);
+    }
+
+    /* --- BARRAS --- */
+    .bars-area {
+        width: 450px;
+        display: flex;
+        flex-direction: column;
+        gap: 9px;
+        margin-top: 15px;
+    }
+
+    .progress-bar {
+        width: 100%; height: 30px;
+        background: rgba(0, 0, 0, 0.5);
+        border: 2px solid white;
+        border-radius: 4px;
+        overflow: hidden;
+        position: relative;
+    }
+
+    .progress-fill {
+        height: 100%;
+        background: #00ff00;
+        transition: width 0.1s ease-out;
+    }
+
+    .sprint-bar {
+        width: 60%; height: 18px;
+        align-self: center;
+        background: rgba(0, 0, 0, 0.5);
+        border: 2px solid rgba(255, 255, 255, 0.4);
+        border-radius: 4px;
+        overflow: hidden;
+    }
+
+    .sprint-fill { height: 100%; background: #ffcc00; transition: width 0.1s ease-out; }
+    .sprint-fill.exhausted { background: #ff4444; opacity: 0.8; }
+
+    /* Jefe y Crítico */
+    .progress-fill.boss-fill {
+        background: linear-gradient(90deg, #800000, #ff0077, #800000);
+        background-size: 200% 100%;
+        animation: boss-gradient-move 1.2s linear infinite;
+    }
+
+    @@keyframes boss-gradient-move { 0% { background-position: 200% 0; } 100% { background-position: 0% 0; } }
+
+    .critical-blink { animation: critical-pulse 0.4s infinite alternate; }
+    @@keyframes critical-pulse { from { opacity: 1; } to { opacity: 0.6; } }
+
+    .normal-shake { animation: shake-light 0.3s infinite; }
+    .boss-shake { animation: shake-heavy 0.2s infinite; border-color: red !important; }
+
+    @@keyframes shake-light {
+        0%, 100% { transform: translate(0,0); }
+        25% { transform: translate(-1px,0); }
+        75% { transform: translate(1px,0); }
+    }
+
+    @@keyframes shake-heavy {
+        0%, 100% { transform: translate(0,0); }
+        20% { transform: translate(-2px,2px); }
+        40% { transform: translate(2px,-2px); }
+        60% { transform: translate(-2px,-2px); }
+        80% { transform: translate(2px,2px); }
+    }
+</style>
+
+@code {
+    [Property] public FishingEvent Event { get; set; }
+
+    protected override int BuildHash()
+    {
+        if ( Event == null ) return 0;
+
+        var inv = Scene.GetAllComponents<ItemInventory>().FirstOrDefault();
+
+        return System.HashCode.Combine(
+            Event.PlayerPos,
+            Event.FishPos,
+            Event.CaptureProgress,
+            Event.StaminaEnergy,
+            Event.IsActive,
+            inv?.SelectedIndex, // Para el cambio de color de item
+            Event.IsCloneActive
+        );
+    }
+}

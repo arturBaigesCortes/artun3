@@ -1,0 +1,64 @@
+@using Sandbox;
+@using Sandbox.UI;
+@using System.Linq;
+@inherits PanelComponent
+@namespace Sandbox
+
+<root class="prompt-root">
+    @if (IsNearShop())
+    {
+        <div class="prompt-box">
+            <label class="prompt-key">F</label>
+            <label class="prompt-text">Abrir tienda</label>
+        </div>
+    }
+</root>
+
+<style>
+    .prompt-root {
+        position: absolute;
+        width: 100%;
+        height: 100%;
+        display: flex;
+        justify-content: center;
+        align-items: flex-end;
+        padding-bottom: 160px;
+        pointer-events: none;
+        z-index: 400;
+    }
+
+    .prompt-box {
+        background-color: rgba(0,0,0,0.75);
+        border: 2px solid #fcc051;
+        border-radius: 10px;
+        padding: 10px 24px;
+        display: flex;
+        align-items: center;
+        gap: 14px;
+    }
+
+    .prompt-key {
+        font-family: 'Poppins';
+        font-size: 22px;
+        font-weight: 900;
+        color: #fcc051;
+        background-color: #3a3a3a;
+        border: 2px solid #fcc051;
+        border-radius: 6px;
+        padding: 2px 12px;
+    }
+
+    .prompt-text {
+        font-family: 'Poppins';
+        font-size: 22px;
+        color: white;
+    }
+</style>
+
+@code {
+    bool IsNearShop() =>
+        Scene.GetAllComponents<ShopTrigger>().FirstOrDefault()?.IsPlayerNearby() ?? false;
+
+    protected override int BuildHash() =>
+        System.HashCode.Combine(IsNearShop());
+}

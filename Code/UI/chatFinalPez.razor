@@ -1,0 +1,166 @@
+@using Sandbox;
+@using Sandbox.UI;
+@using System.Linq;
+@inherits PanelComponent
+@namespace Sandbox
+
+<root class="decision-screen @(ShowingDecision ? "" : "hidden")">
+    <div class="decision-card">
+        <label class="title">¿QUÉ HARÁS CON EL @(CurrentFish?.Name.ToUpper() ?? "PEZ")?</label>
+        <div class="button-group">
+            <button class="btn sell" onclick=@(() => HandleFinalAction(true))>
+                <label class="btn-text">VENDER</label>
+                <label class="price-tag">@(CurrentFish?.Price ?? 0)$</label>
+            </button>
+            <button class="btn release" onclick=@(() => HandleFinalAction(false))>
+                <label class="btn-text">SOLTAR</label>
+            </button>
+        </div>
+    </div>
+</root>
+
+<style>
+    .decision-screen {
+        position: absolute;
+        width: 100%;
+        height: 100%;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        background-color: rgba(0, 0, 0, 0.7);
+        z-index: 1000;
+        pointer-events: all;
+    }
+
+    .decision-screen.hidden {
+        display: none;
+        pointer-events: none;
+    }
+
+    .decision-card {
+        background-color: #2b2b2b;
+        border: 4px solid #51fcc0;
+        border-radius: 20px;
+        padding: 50px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        box-shadow: 0 20px 50px rgba(0,0,0,0.8);
+    }
+
+    .title {
+        font-family: 'Poppins';
+        font-size: 32px;
+        font-weight: 900;
+        color: white;
+        margin-bottom: 40px;
+        text-shadow: 2px 2px 0px black;
+    }
+
+    .button-group { display: flex; gap: 30px; }
+
+    .btn {
+        width: 220px;
+        height: 100px;
+        border-radius: 12px;
+        border: none;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        cursor: pointer;
+        transition: transform 0.1s ease;
+    }
+
+    .btn:hover { transform: scale(1.1); filter: brightness(1.2); }
+
+    .btn-text { font-size: 28px; font-weight: bold; pointer-events: none; }
+    .price-tag { font-size: 18px; opacity: 0.8; pointer-events: none; }
+
+    .sell { background-color: #fcc051; color: #3a1f04; }
+    .release { background-color: #51fcc0; color: #003322; }
+</style>
+
+@code {
+    [Property] public bool ShowingDecision { get; set; } = false;
+    [Property] public FishResource CurrentFish { get; set; }
+
+    public void Show(FishResource fish)
+    {
+        CurrentFish = fish;
+        ShowingDecision = true;
+        Mouse.Visible = true;
+        StateHasChanged();
+    }
+
+    async void HandleFinalAction(bool sell)
+	{
+		Log.Info($"--- Iniciando Acción Final: {(sell ? "VENDER" : "SOLTAR")} ---");
+
+		var fishBrain = Scene.GetAllComponents<FishBrain>().FirstOrDefault();
+		bool talked = fishBrain?.HasTalkedTo ?? false;
+
+		// quito el pez de la lista del jugador
+		var inventory = Scene.GetAllComponents<Inventory>().FirstOrDefault();
+		if (inventory != null && CurrentFish != null)
+		{
+			inventory.CaughtFishes.Remove(CurrentFish);
+		}
+
+		// sumo el precio si el jugador decidió vender
+		if (sell && CurrentFish != null)
+		{
+			var money = Scene.GetAllComponents<Money>().FirstOrDefault();
+			money?.Add(CurrentFish.Price);
+		}
+
+		// registra la decision final en el sistema de karma
+		var karma = Scene.GetAllComponents<KarmaManager>().FirstOrDefault();
+		karma?.RegisterDecision(sell, talked);
+
+		// cierra el panel de decisión y ocultamos el ratón
+		ShowingDecision = false;
+		Mouse.Visible = false;
+		StateHasChanged();
+
+		var globo = Scene.GetAllComponents<Sandbox.globoDespedida>().FirstOrDefault();
+		if (globo == null) 
+		{ 
+			Log.Error("❌ No se encontró 'globoDespedida' en la escena."); 
+			return; 
+		}
+
+		// activa la animacion de carga
+		globo.ShowMessage(CurrentFish, "...");
+
+		// genera el mensaje de despedida según el contexto
+		string mensajeFinal;
+		if (fishBrain != null)
+		{
+			//prompt dinámico con la decision del user
+			string contexto = sell
+				? (talked
+					? "El jugador ha decidido VENDERTE después de haber hablado contigo. Reacciona con traición, tristeza o ironía. Máximo 2 frases."
+					: "El jugador ha decidido VENDERTE sin haber hablado contigo ni una sola vez. Reacciona como quieras. Máximo 2 frases.")
+				: (talked
+					? "El jugador ha decidido SOLTARTE al mar después de haber hablado contigo. Despídete con emoción o gratitud. Máximo 2 frases."
+					: "El jugador ha decidido SOLTARTE al mar sin haberte dicho nada. Despídete como quieras. Máximo 2 frases.");
+
+			Log.Info($"[Despedida] Pidiendo mensaje a la IA: {contexto}");
+			
+			// Llamada asíncrona a la IA
+			mensajeFinal = await fishBrain.HablarConIA(contexto);
+			
+		}
+		else
+		{
+			// Fallback en caso de que el componente FishBrain no esté disponible
+			mensajeFinal = sell ? "Glub... adiós, traidor." : "¡Libertad! ¡Glub glub!";
+		}
+
+		// reemplazi los puntos de carga por el mensaje real
+		globo.UpdateMessage(mensajeFinal);
+		Log.Info($"[Despedida] Mensaje IA final: {mensajeFinal}");
+		Scene.GetAllComponents<Artun2.TutorialController>().FirstOrDefault()?.OnFishSoldOrReleased();
+	}
+}

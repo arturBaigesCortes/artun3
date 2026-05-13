@@ -1,0 +1,126 @@
+@using Sandbox;
+@using Sandbox.UI;
+@using System.Collections.Generic;
+@using System.Linq;
+@inherits PanelComponent
+@namespace Sandbox
+
+<root>
+    @if ( IsOpen )
+    {
+        <div style="position: absolute; width: 480px; height: 550px; background-color: rgba( 0, 5, 20, 0.95 ); border: 2px solid #51fcc0; top: 100px; left: 100px; display: flex; flex-direction: column; pointer-events: all; border-radius: 12px; box-shadow: 0 0 30px rgba(0,0,0,0.5);">
+            
+            <div style="display: flex; justify-content: space-between; background-color: #51fcc0; padding: 12px; color: black; border-top-left-radius: 10px; border-top-right-radius: 10px;">
+                <label style="font-size: 24px; font-family: 'Poppins'; font-weight: 800; text-transform: uppercase;">INVENTARIO DE PESCA</label>
+                <div style="background-color: #ff4444; color: white; padding: 0 20px; cursor: pointer; font-size: 20px; font-weight: bold; border-radius: 6px; display: flex; align-items: center;" onclick=@ToggleInventory>X</div>
+            </div>
+
+            
+			<div style="padding: 20px; display: flex; flex-wrap: wrap; gap: 15px; justify-content: center; flex-grow: 1; overflow-y: scroll;">
+                @for ( int i = 0; i < 16; i++ )
+                {
+                    int index = i;
+                    
+                    <div style="width: 90px; min-height: 110px; display: flex; flex-direction: column; align-items: center; gap: 5px;">
+                        
+                        <div style="width: 80px; height: 80px; background-color: rgba( 255, 255, 255, 0.05 ); border: 1px solid rgba( 81, 252, 192, 0.2 ); display: flex; justify-content: center; align-items: center; cursor: pointer; border-radius: 8px;" 
+                            onclick=@(() => OnFishClicked(index))>
+                            
+                            @if ( CaughtFishes.Count > i )
+                            {
+                                <img src="@CaughtFishes[i].IconPath" style="width: 60px; height: 60px; object-fit: contain;" />
+                            }
+                            else
+                            {
+                                <div style="width: 6px; height: 6px; background-color: rgba( 255, 255, 255, 0.1 ); border-radius: 50%;"></div>
+                            }
+                        </div>
+
+                        @if ( CaughtFishes.Count > i )
+                        {
+                            <label style="font-size: 11px; color: #51fcc0; text-align: center; text-transform: uppercase; font-weight: bold; width: 100%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+                                @CaughtFishes[i].Name
+                            </label>
+                        }
+                    </div>
+                }
+            </div>
+
+            <div style="padding: 12px; background-color: #050505; border-bottom-left-radius: 10px; border-bottom-right-radius: 10px; border-top: 1px solid rgba(81, 252, 192, 0.1);">
+                <label style="font-size: 13px; color: #51fcc0; width: 100%; text-align: center; font-family: 'Poppins';">Presiona [E] o [ESC] para cerrar</label>
+            </div>
+        </div>
+    }
+</root>
+
+@code
+{
+    [Property] public bool IsOpen { get; set; } = false;
+    
+    // Lista que almacena los objetos FishResource capturados
+    public List<FishResource> CaughtFishes { get; set; } = new List<FishResource>();
+
+    protected override void OnUpdate()
+    {
+        // Tecla [E] para abrir/cerrar
+        if ( Input.Pressed( "use" ) ) ToggleInventory();
+
+
+        // Si está abierto y pulsas ESC, cierra
+        if ( IsOpen && Input.Pressed( "escape" ) )
+        {
+            CloseInventory();
+        }
+    }
+
+    public void ToggleInventory()
+    {
+        if ( IsOpen ) CloseInventory();
+        else OpenInventory();
+
+    }
+
+    public void OpenInventory()
+    {
+        IsOpen = true;
+        Mouse.Visible = true;
+		Scene.GetAllComponents<Artun2.TutorialController>().FirstOrDefault()?.OnInventoryOpened();
+    }
+
+    public void CloseInventory()
+    {
+        IsOpen = false;
+        Mouse.Visible = false;
+    }
+
+    void OnFishClicked( int index )
+    {
+        // verifica el incice del pez valido
+        if ( CaughtFishes == null || index < 0 || index >= CaughtFishes.Count ) 
+            return;
+
+        var selectedFish = CaughtFishes[index];
+        if ( selectedFish == null ) return;
+
+        // Buscamos el componente de Chat en la escena
+        var chat = Scene.GetAllComponents<FishChat>().FirstOrDefault();
+        
+        if ( chat != null )
+        {
+            Log.Info( $"Abriendo chat con: {selectedFish.Name}" );
+            
+            // le pasamos el recuerso al chat
+            chat.Open( selectedFish );
+            
+            // cierra el inventario para poder chatear cómodamente
+            CloseInventory();
+        }
+        else
+        {
+            Log.Error( "No se encontró el componente FishChat en la escena." );
+        }
+    }
+
+    
+    protected override int BuildHash() => System.HashCode.Combine( IsOpen, CaughtFishes?.Count );
+}

@@ -1,0 +1,59 @@
+@using Sandbox;
+@using Sandbox.UI;
+@using System.Linq;
+@inherits PanelComponent
+@namespace Sandbox
+
+<root class="money-hud">
+    <div class="money-container">
+        <img class="money-icon" src="textures/items/business.png" />
+        <label class="money-amount">@GetMoney()$</label>
+    </div>
+</root>
+
+<style>
+    .money-hud {
+        position: absolute;
+        top: 30px;
+        right: 30px;
+        z-index: 500;
+        pointer-events: none;
+    }
+
+    .money-container {
+        background-color: rgba(71, 58, 0, 0.75);
+        border: 3px solid #fcc051;
+        border-radius: 14px;
+        padding: 10px 22px;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+
+    /* Ajustamos el tamaño de la imagen */
+    .money-icon {
+        width: 42px;
+        height: 42px;
+        object-fit: contain;
+    }
+
+    .money-amount {
+        font-family: 'Poppins';
+        font-size: 30px;
+        font-weight: 900;
+        color: #fcc051;
+        text-shadow: 2px 2px 0px rgba(20, 20, 20, 0.603);
+    }
+</style>
+
+@code {
+    int GetMoney()
+    {
+        return Scene.GetAllComponents<Money>().FirstOrDefault()?.Amount ?? 0;
+    }
+
+    protected override int BuildHash()
+    {
+        return System.HashCode.Combine(GetMoney());
+    }
+}

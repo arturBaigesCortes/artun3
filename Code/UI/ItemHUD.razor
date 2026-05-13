@@ -1,0 +1,280 @@
+@using Sandbox;
+
+@using Sandbox.UI;
+@using System.Linq;
+@inherits PanelComponent
+@namespace Sandbox
+
+<root class="item-hud">
+    
+    @{
+        var inv = GetInventory();
+        var selectedItem = inv?.SelectedItem;
+        string displayName = (inv?.SelectedIndex == -1) ? "Sin objetos equipados" : (selectedItem?.Name ?? "Vacío");
+    }
+    
+    <label class="selected-item-name">@displayName</label>
+
+    @{
+        
+        bool noneSelected = inv == null || inv.SelectedIndex == -1;
+
+        // slot vacio de la hotbar
+        <div class="item-slot none-slot @(noneSelected ? "selected" : "")">
+            <label class="none-icon">∅</label>
+            <label class="slot-number">-</label>
+        </div>
+
+        for (int i = 0; i < ItemInventory.MaxSlots; i++)
+        {
+            var item = (inv != null && i < inv.OwnedItems.Count) ? inv.OwnedItems[i] : null;
+            bool selected = inv != null && i == inv.SelectedIndex;
+            bool isEmpty = item == null;
+
+            <div class="item-slot @(selected ? "selected" : "") @(isEmpty ? "empty" : "")">
+                @if (item != null)
+                {
+                    int dur = inv?.GetDurability(i) ?? 0;
+                    int maxDur = item.MaxDurability;
+                    bool broken = maxDur > 0 && dur <= 0;
+                    bool infinite = maxDur <= 0;
+
+                    if (!infinite)
+                    {
+                        <div class="dur-bar">
+                            <div class="dur-fill @(broken ? "broken" : dur <= maxDur / 3 ? "low" : "")"
+                                 style="width: @(broken ? 0 : ((float)dur / maxDur * 100))%">
+                            </div>
+                        </div>
+                    }
+
+                    if (broken)
+                    {
+                        <label class="broken-tag">ROTO</label>
+                    }
+
+                    <img class="item-icon" src=@item.IconPath />
+
+                    if (item.Type == ItemType.PassiveArea && selected)
+                    {
+                        <label class="passive-tag">PASIVO</label>
+                    }
+                }
+                <label class="slot-number">@(i + 1)</label>
+            </div>
+        }
+    }
+</root>
+
+
+
+<style>
+    .item-hud {
+        position: absolute;
+        bottom: 40px;
+        left: 50%;
+        transform: translateX(-50%);
+        display: flex;
+        flex-direction: row;
+        gap: 10px;
+        pointer-events: none;
+        z-index: 500;
+    }
+
+    .item-slot {
+        width: 80px;
+        height: 80px;
+        background-color: rgba(0, 0, 0, 0.7);
+        border: 3px solid #555;
+        border-radius: 12px;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        position: relative;
+    }
+
+    .item-slot.empty {
+        background-color: rgba(0, 0, 0, 0.4);
+        border-color: #333;
+    }
+
+    .item-slot.selected {
+        border-color: #fcc051;
+        box-shadow: 0 0 14px rgba(252, 192, 81, 0.7);
+    }
+
+    /* DESPUÉS */
+	.none-slot {
+		border: 3px solid #444;
+	}
+
+	.none-slot.selected {
+		border: 3px solid #fcc051;
+	}
+
+    .none-icon {
+        font-size: 32px;
+        color: #555;
+    }
+
+    .none-slot.selected .none-icon {
+        color: #fcc051;
+    }
+
+    .item-icon {
+        width: 48px;
+        height: 48px;
+    }
+
+    .slot-number {
+        position: absolute;
+        top: 4px;
+        left: 8px;
+        font-family: 'Poppins';
+        font-size: 13px;
+        font-weight: 700;
+        color: #666;
+    }
+
+    .item-slot.selected .slot-number {
+        color: #fcc051;
+    }
+
+    .uses-left {
+        position: absolute;
+        bottom: 4px;
+        right: 8px;
+        font-family: 'Poppins';
+        font-size: 18px;
+        font-weight: 900;
+        color: #fcc051;
+        text-shadow: 1px 1px 0px black;
+    }
+
+    .passive-tag {
+        font-family: 'Poppins';
+        font-size: 10px;
+        font-weight: 700;
+        color: #51fcc0;
+        text-shadow: 1px 1px 0px black;
+    }
+
+    .recharge-bar {
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        width: 100%;
+        height: 8px;
+        background-color: #333;
+        border-radius: 0 0 10px 10px;
+        overflow: hidden;
+    }
+
+    .recharge-fill {
+        height: 100%;
+        background-color: #51fcc0;
+    }
+
+
+	
+    .selected-item-name {
+        position: absolute;
+        top: -40px; /* Lo mueve 40px hacia arriba de la barra */
+        left: 0;
+        right: 0;
+        text-align: center;
+        font-family: 'Poppins';
+        font-size: 24px;
+        font-weight: 800;
+        color: white;
+        text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8);
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        pointer-events: none;
+        
+        /* Animación suave cuando cambia el texto */
+        transition: all 0.2s ease-out;
+    }
+
+    /* Opcional: Cambiar el color si el ítem está seleccionado */
+    .item-hud:has(.selected) .selected-item-name {
+        color: #fcc051;
+    }
+
+
+	.dur-bar {
+		position: absolute;
+		bottom: 0;
+		left: 0;
+		width: 100%;
+		height: 5px;
+		background-color: #222;
+		border-radius: 0 0 10px 10px;
+		overflow: hidden;
+	}
+
+	.dur-fill {
+		height: 100%;
+		background-color: #51fcc0;
+	}
+
+	.dur-fill.low {
+		background-color: #fcc051;
+	}
+
+	.dur-fill.broken {
+		background-color: #ff4444;
+	}
+
+	.dur-fill, .recharge-fill {
+        transition: width 0.2s ease-out, background-color 0.3s ease;
+    }
+
+    .item-slot {
+        transition: transform 0.1s ease-in-out, border-color 0.2s;
+    }
+
+    .item-slot.selected {
+        transform: scale(1.05);
+        z-index: 10;
+    }
+
+    
+
+	.broken-tag {
+		position: absolute;
+		font-family: 'Poppins';
+		font-size: 10px;
+		font-weight: 900;
+		color: #ff4444;
+		text-shadow: 1px 1px 0px black;
+	}
+
+</style>
+
+@code {
+    ItemInventory GetInventory() =>
+        Scene.GetAllComponents<ItemInventory>().FirstOrDefault();
+
+    protected override int BuildHash()
+	{
+		
+
+		var inv = GetInventory();
+		var ev = Scene.GetAllComponents<FishingEvent>().FirstOrDefault();
+		if (inv == null) return 1;
+
+		int durHash = 0;
+        foreach (var d in inv.Durabilities) durHash = System.HashCode.Combine(durHash, d);
+
+		return System.HashCode.Combine(
+			inv.SelectedIndex,
+            inv.OwnedItems.Count,
+            inv.SelectedItem?.Name,
+			durHash,
+			ev?.StaminaEnergy,
+			ev?.IsExhausted
+		);
+	}
+}

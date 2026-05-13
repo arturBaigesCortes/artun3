@@ -1,0 +1,254 @@
+@using Sandbox;
+@using Sandbox.UI;
+@inherits PanelComponent
+@namespace Artun2
+
+@if (IsVisible)
+{
+    <root class="tutorial-container">
+        <div class="tutorial-dialogue-box" onclick=@(() => Close())>
+
+            <div class="portrait-slot">
+                <img src="textures/items/fishprofessor.png" class="fish-portrait-img"/>
+                <div class="portrait-frame"></div>
+            </div>
+
+            <div class="dialogue-content">
+                <h2 class="tutorial-name-label">Profesor Glorp</h2>
+
+                @if (DisplayMessage == "...")
+                {
+                    <div class="loading-dots">
+                        <div class="dot"></div>
+                        <div class="dot"></div>
+                        <div class="dot"></div>
+                    </div>
+                }
+                else
+                {
+                    <p class="message-text">@DisplayMessage</p>
+                }
+            </div>
+
+            <div class="continue-arrow">▼ (Presiona F para continuar)</div>
+        </div>
+    </root>
+}
+
+@if (HasActiveStep && !IsVisible)
+{
+    <root class="objective-container">
+        <div class="objective-box">
+			<span class="objective-icon">🎯</span>
+			<div class="objective-content">
+				<span class="objective-text">@CurrentObjective</span>
+				<span class="objective-hint">Click derecho para releer</span>
+			</div>
+		</div>
+    </root>
+}
+
+<style>
+    .tutorial-container {
+        position: absolute;
+        top: 0; left: 0;
+        width: 100%; height: 100%;
+        display: flex;
+        justify-content: center;
+        align-items: flex-end;
+        padding-bottom: 50px;
+        z-index: 999;
+        pointer-events: none;
+        background-color: transparent;
+    }
+
+    .tutorial-dialogue-box {
+        background-color: #dff0ff;
+        border: 4px solid #1a3a5d;
+        width: 850px;
+        height: 220px;
+        display: flex;
+        padding: 25px;
+        position: relative;
+        box-shadow: 0 10px 0 #0d2137;
+        pointer-events: none;
+    }
+
+    .portrait-slot {
+        width: 140px;
+        height: 140px;
+        background: #88c0f0;
+        border: 4px solid #1a3a5d;
+        flex-shrink: 0;
+    }
+
+    .fish-portrait-img {
+        width: 100%; height: 100%;
+        image-rendering: pixelated;
+    }
+
+    .dialogue-content {
+        margin-left: 30px;
+        flex-grow: 1;
+        display: flex;
+        flex-direction: column;
+        justify-content: flex-start;
+        color: #1a3a5d;
+        font-family: 'Courier New', Courier, monospace;
+        overflow: visible;
+    }
+
+    .tutorial-name-label {
+        font-size: 26px;
+        margin: 0 0 15px 0;
+        font-weight: bold;
+        flex-shrink: 0;
+    }
+
+    .message-text {
+        font-size: 24px;
+        margin: 0;
+        width: 100%;
+        white-space: normal;
+        overflow: visible;
+        height: auto;
+    }
+
+    .continue-arrow {
+        position: absolute;
+        bottom: 15px; right: 20px;
+        animation: bounce 0.5s infinite alternate;
+        color: #1a3a5d;
+        font-family: sans-serif;
+        font-size: 14px;
+    }
+
+    /* --- Cajita pequeña de objetivo --- */
+    .objective-container {
+        position: absolute;
+        bottom: 60px; right: 30px;
+        pointer-events: none;
+        z-index: 998;
+    }
+
+    .objective-box {
+        background-color: rgba(15, 40, 80, 0.85);
+        border: 3px solid #88c0f0;
+        padding: 10px 18px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        pointer-events: none;
+        cursor: pointer;
+        max-width: 320px;
+    }
+
+    .objective-icon { font-size: 20px; }
+
+    .objective-text {
+        color: #dff0ff;
+        font-family: 'Courier New', Courier, monospace;
+        font-size: 18px;
+        white-space: normal;
+    }
+
+    .loading-dots {
+        display: flex; gap: 8px;
+        padding-top: 10px; align-items: center;
+    }
+
+    .dot {
+        width: 12px; height: 12px;
+        background-color: #1a3a5d;
+        border-radius: 50%;
+        animation: wave 1.2s infinite ease-in-out;
+    }
+
+	.objective-content {
+		display: flex;
+		flex-direction: column;
+		gap: 4px;
+	}
+
+	.objective-hint {
+		color: #88c0f0;
+		font-family: 'Courier New', Courier, monospace;
+		font-size: 13px;
+		opacity: 0.7;
+	}
+
+    .dot:nth-child(2) { animation-delay: 0.2s; }
+    .dot:nth-child(3) { animation-delay: 0.4s; }
+
+    @@keyframes wave {
+        0%, 60%, 100% { transform: translateY(0); }
+        30%            { transform: translateY(-15px); }
+    }
+
+    @@keyframes bounce {
+        from { transform: translateY(0); }
+        to   { transform: translateY(5px); }
+    }
+</style>
+
+@code {
+    public bool IsVisible { get; private set; } = false;
+    public bool HasActiveStep { get; private set; } = false;
+    public string DisplayMessage { get; private set; } = "";
+    public string CurrentObjective { get; private set; } = "";
+
+    public void ShowStep(string message, string objective)
+    {
+		
+        DisplayMessage = message;
+        CurrentObjective = objective;
+        IsVisible = true;
+        HasActiveStep = true;
+        
+        StateHasChanged();
+    }
+
+    public void UpdateObjective(string objective)
+    {
+        CurrentObjective = objective;
+        StateHasChanged();
+    }
+
+    protected override void OnUpdate()
+	{
+		if (IsVisible && Input.Pressed("Interactuar"))
+		{
+			Close();
+			// Avisar al controller si estamos en KarmaInfo
+			Scene.GetAllComponents<Artun2.TutorialController>()
+				.FirstOrDefault()?.OnKarmaInfoClosed();
+		}
+
+		if (!IsVisible && HasActiveStep && Input.Pressed("attack2")) Reopen();
+	}
+
+    public void Close()
+    {
+        IsVisible = false;
+        
+        StateHasChanged();
+    }
+
+	
+
+    // Al hacer click en la cajita pequeña, reabre el globo
+    public void Reopen()
+    {
+        IsVisible = true;
+        
+        StateHasChanged();
+    }
+
+    public void CompleteStep()
+    {
+        IsVisible = false;
+        HasActiveStep = false;
+        
+        StateHasChanged();
+    }
+}

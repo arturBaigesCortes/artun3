@@ -1,0 +1,292 @@
+
+
+@using Sandbox;
+@using Sandbox.UI;
+@using System;
+@inherits PanelComponent
+
+@if ( FishingLogic != null && FishingLogic.IsActive )
+{
+	//NO VUELVAS A CONFUNDIR ESTE ARCHIVO CON EL DE PESCA, EL LINKADO ES EL OTRO
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+	
+
+    // Calculamos si está fuera del rango para el pulso rojo
+    bool isOutOfRange = Vector2.Distance(FishingLogic.PlayerPos, FishingLogic.FishPos) > 0.18f;
+    
+    // Velocidad del pulso: Más rápido cuanto menos progreso queda (cerca de 0)
+    // Entre 2s (seguro) y 0.4s (a punto de escapar)
+    float pulseDuration = 0.4f + (FishingLogic.CaptureProgress * 1.6f);
+
+    <root class="fishing-game @(isOutOfRange ? "danger-pulse" : "")" 
+          style="animation-duration: @(pulseDuration)s">
+        
+        <div class="game-body">
+            <div class="water-area">
+                <div class="capture-pointer" style="left: @(FishingLogic.PlayerPos.x * 100)%; top: @(FishingLogic.PlayerPos.y * 100)%;">
+                    <div class="corner tl"></div>
+                    <div class="corner tr"></div>
+                    <div class="corner bl"></div>
+                    <div class="corner br"></div>
+                    <div class="center-dot"></div>
+                </div>
+                <div class="fish" style="left: @(FishingLogic.FishPos.x * 100)%; top: @(FishingLogic.FishPos.y * 100)%;"></div>
+            </div>
+
+            <div class="ui-right">
+                <div class="progress-container">
+                    <div class="progress-fill" style="height: @(FishingLogic.CaptureProgress * 100)%"></div>
+                </div>
+            </div>
+
+
+			<div class="sprint-row">
+            	<div class="sprint-bar">
+                	<div class="sprint-fill @(FishingLogic.IsExhausted ? "exhausted" : "")" 
+                     	style="width: @(FishingLogic.StaminaEnergy * 100)%"></div>
+            	</div>
+        </div>
+
+        </div>
+
+        
+
+    </root>
+}
+
+<style>
+    .fishing-game {
+        position: absolute;
+        left: 50%; top: 50%;
+        transform: translate(-50%, -50%);
+        width: 500px; height: 540px;
+        background-color: #000000AA;
+        display: flex;
+        flex-direction: column;
+        padding: 25px;
+        gap: 12px;
+        border-radius: 12px;
+        border: 2px solid #55aaff33;
+    }
+
+    /* Animación de Peligro */
+    .danger-pulse {
+        animation: pulse-red infinite ease-in-out;
+    }
+
+    @@keyframes pulse-red {
+        0%   { background-color: #000000AA; }
+        50%  { background-color: #ff000033; }
+        100% { background-color: #000000AA; }
+    }
+
+    /* Contenedor horizontal: área de agua + barra captura */
+    .game-body {
+        display: flex;
+        flex: 1;
+        gap: 0;
+    }
+
+    .water-area {
+        flex: 1;
+        background-color: #0a1118;
+        position: relative;
+        border: 2px solid #55aaff;
+        border-radius: 6px;
+        overflow: hidden;
+    }
+
+    /* Puntero de Esquinas */
+    .capture-pointer {
+        position: absolute;
+        width: 80px; height: 80px;
+        transform: translate(-50%, -50%);
+    }
+
+    .corner {
+        position: absolute;
+        width: 15px; height: 15px;
+        border: 3px solid #55aaff;
+    }
+    .tl { top: 0; left: 0; border-right: none; border-bottom: none; border-radius: 4px 0 0 0; }
+    .tr { top: 0; right: 0; border-left: none; border-bottom: none; border-radius: 0 4px 0 0; }
+    .bl { bottom: 0; left: 0; border-right: none; border-top: none; border-radius: 0 0 0 4px; }
+    .br { bottom: 0; right: 0; border-left: none; border-top: none; border-radius: 0 0 4px 0; }
+
+    .center-dot {
+        position: absolute;
+        left: 50%; top: 50%;
+        width: 6px; height: 6px;
+        background: #55aaff;
+        border-radius: 100%;
+        transform: translate(-50%, -50%);
+    }
+
+    .fish {
+        position: absolute;
+        width: 12px; height: 12px;
+        background-color: #ffaa00;
+        border-radius: 100%;
+        box-shadow: 0 0 15px #ffaa00;
+        transform: translate(-50%, -50%);
+    }
+
+    /* Barra de captura — vertical a la derecha */
+    .ui-right {
+        display: flex;
+        gap: 10px;
+        margin-left: 20px;
+    }
+
+    .progress-container {
+        width: 15px;
+        height: 100%;
+        background: #111;
+        border: 1px solid #333;
+        display: flex;
+        flex-direction: column-reverse;
+        border-radius: 4px;
+        overflow: hidden;
+    }
+
+    .progress-fill {
+        background: #00ff88;
+        width: 100%;
+        transition: height 0.1s;
+    }
+
+    /* Barra de sprint — horizontal, centrada debajo */
+    .sprint-row {
+    display: flex;
+    justify-content: center;
+    align-items: flex-end;
+    height: 225px; /* la mitad de altura del panel de agua aprox */
+	}	
+
+    .sprint-bar {
+    width: 15px; /* mismo ancho que la barra de captura */
+    height: 100%;
+    background: #111;
+    border: 1px solid #333;
+    display: flex;
+    flex-direction: column-reverse;
+    border-radius: 4px;
+    overflow: hidden;
+	}
+
+    .sprint-fill {
+    width: 100%;
+    background: #ffcc00;
+    transition: height 0.1s;
+	}
+
+    .sprint-fill.exhausted {
+        background: #ff4444;
+        opacity: 0.7;
+    }
+</style>
+
+@code {
+    // Variable estática para que otros scripts (como el del jugador) sepan que estamos pescando
+    [Property] public FishingEvent FishingLogic { get; set; }
+    public static bool IsFishingModeActive { get; private set; } = true;
+
+    bool IsOpen = false;
+    
+    // Posiciones en porcentaje (0 a 100)
+    Vector2 CubePos = new Vector2( 50f, 50f );
+    Vector2 FishPos = new Vector2( 50f, 50f );
+    
+    float CaptureProgress = 0f;
+    float CubeSpeed = 60f; // Velocidad de movimiento del cubo
+
+    protected override void OnUpdate()
+    {
+        // 1. Activar/Desactivar con la tecla correspondiente
+        if ( Input.Pressed( "Drop" ) || Input.Pressed( "menu" ) )
+        {
+            IsOpen = !IsOpen;
+            IsFishingModeActive = IsOpen;
+            
+            if ( IsOpen ) ResetGame();
+        }
+
+        if ( IsOpen )
+        {
+            UpdatePlayerMovement();
+            UpdateFishAI();
+            CheckCapture();
+        }
+    }
+
+    void ResetGame()
+    {
+        CaptureProgress = 0f;
+        CubePos = new Vector2( 50f, 50f );
+        FishPos = new Vector2( 50f, 50f );
+    }
+
+    void UpdatePlayerMovement()
+    {
+        if ( Input.Down( "Forward" ) )  CubePos.y -= CubeSpeed * RealTime.Delta;
+        if ( Input.Down( "Backward" ) ) CubePos.y += CubeSpeed * RealTime.Delta;
+        if ( Input.Down( "Left" ) )     CubePos.x -= CubeSpeed * RealTime.Delta;
+        if ( Input.Down( "Right" ) )    CubePos.x += CubeSpeed * RealTime.Delta;
+
+        CubePos.x = Math.Clamp( CubePos.x, 0f, 100f );
+        CubePos.y = Math.Clamp( CubePos.y, 0f, 100f );
+    }
+
+    void UpdateFishAI()
+    {
+        float time = RealTime.Now;
+        float targetX = 50f + MathF.Sin( time * 1.5f ) * 35f + MathF.Cos( time * 0.7f ) * 15f;
+        float targetY = 50f + MathF.Cos( time * 1.2f ) * 35f + MathF.Sin( time * 0.5f ) * 15f;
+
+        FishPos.x = MathX.Lerp( FishPos.x, targetX, RealTime.Delta * 2f );
+        FishPos.y = MathX.Lerp( FishPos.y, targetY, RealTime.Delta * 2f );
+    }
+
+    void CheckCapture()
+    {
+        float distX = MathF.Abs( CubePos.x - FishPos.x );
+        float distY = MathF.Abs( CubePos.y - FishPos.y );
+
+        if ( distX < 12.5f && distY < 12.5f )
+            CaptureProgress += 25f * RealTime.Delta;
+        else
+            CaptureProgress -= 15f * RealTime.Delta;
+
+        CaptureProgress = Math.Clamp( CaptureProgress, 0f, 100f );
+
+        if ( CaptureProgress >= 100f )
+        {
+            Log.Info( "¡Pez capturado!" );
+            IsOpen = false;
+            IsFishingModeActive = false;
+        }
+    }
+}

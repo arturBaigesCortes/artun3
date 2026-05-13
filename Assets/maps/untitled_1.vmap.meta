@@ -1,0 +1,24 @@
+{
+  "publish": {
+    "Enabled": false,
+    "ProjectConfig": {
+      "Title": "Untitled 1",
+      "Type": "map",
+      "Org": "local",
+      "Ident": "untitled1",
+      "Schema": 0,
+      "IncludeSourceFiles": false,
+      "Resources": null,
+      "PackageReferences": [],
+      "EditorReferences": [
+        "facepunch.concretedamaged03#116219"
+      ],
+      "Mounts": null,
+      "IsStandaloneOnly": false,
+      "Metadata": {
+        "SingleAssetSource": "maps/untitled_1.vmap",
+        "ParentPackage": "artun.artun2"
+      }
+    }
+  }
+}

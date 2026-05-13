@@ -1,0 +1,14 @@
+{
+  "Title": "k.Ui",
+  "Type": "library",
+  "Org": "kfe",
+  "Ident": "kui",
+  "Schema": 1,
+  "IncludeSourceFiles": false,
+  "Resources": null,
+  "PackageReferences": [],
+  "EditorReferences": null,
+  "Mounts": null,
+  "IsStandaloneOnly": false,
+  "Metadata": {}
+}

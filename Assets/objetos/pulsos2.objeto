@@ -1,0 +1,15 @@
+{
+  "Name": "Boton de emergencia II",
+  "Description": "La ayuda definitiva en tus pescas, con un solo boton terminaras gran parte de la captura",
+  "IconPath": "textures/items/botonrojo.png",
+  "Price": 450,
+  "Type": "CaptureBoost",
+  "MaxDurability": 6,
+  "SprintSpeedMultiplier": 1.8,
+  "SprintDuration": 2,
+  "CaptureBoostAmount": 0.35,
+  "RechargeTime": 6,
+  "AreaMultiplier": 1.5,
+  "__references": [],
+  "__version": 0
+}

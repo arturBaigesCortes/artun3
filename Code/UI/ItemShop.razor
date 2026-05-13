@@ -1,0 +1,187 @@
+@using Sandbox;
+@using Sandbox.UI;
+@using System.Linq;
+@inherits PanelComponent
+@namespace Sandbox
+
+
+<root class="shop-screen @(IsOpen ? "" : "hidden")">
+    <div class="shop-card">
+        <label class="shop-title">TIENDA</label>
+        <div class="shop-items">
+            @foreach (var item in GetShopItems())
+            {
+                bool owned = GetInventory()?.OwnedItems.Contains(item) ?? false;
+                <div class="shop-item @(owned ? "owned" : "")">
+                    <img class="shop-icon" src=@item.IconPath />
+                    <div class="shop-info">
+                        <label class="shop-name">@item.Name</label>
+                        <label class="shop-desc">@item.Description</label>
+                    </div>
+                    @if (owned)
+                    {
+                        <label class="owned-tag">TIENES</label>
+                    }
+                    else
+                    {
+                        <button class="buy-btn" onclick=@(() => TryBuy(item))>
+                            <label>@item.Price$</label>
+                        </button>
+                    }
+                </div>
+            }
+        </div>
+        <button class="close-btn" onclick=@(() => Close())>CERRAR</button>
+    </div>
+</root>
+
+<style>
+
+    .shop-screen {
+        position: absolute;
+        width: 100%;
+        height: 100%;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        background-color: rgba(0,0,0,0.75);
+        z-index: 1000;
+        pointer-events: all;
+    }
+
+    .shop-screen.hidden { display: none; pointer-events: none; }
+
+    .shop-card {
+        background-color: #2b2b2b;
+        border: 4px solid #fcc051;
+        border-radius: 20px;
+        padding: 40px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 20px;
+        min-width: 600px;
+        
+        height: 70%; 
+        max-height: 70%;
+    }
+
+    .shop-title {
+        font-family: 'Poppins';
+        font-size: 36px;
+        font-weight: 900;
+        color: #fcc051;
+        text-shadow: 2px 2px 0px black;
+        flex-shrink: 0; 
+    }
+
+    .shop-items { 
+        display: flex; 
+        flex-direction: column; 
+        gap: 16px; 
+        width: 100%; 
+        
+        flex: 1;                
+        overflow-y: scroll;     
+        padding-right: 10px;   
+    }
+
+    .shop-item {
+        background-color: #3a3a3a;
+        border: 2px solid #555;
+        border-radius: 12px;
+        padding: 16px;
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        flex-shrink: 0;
+    }
+
+    .shop-item.owned { opacity: 0.5; }
+    .shop-icon { width: 56px; height: 56px; }
+    .shop-info { display: flex; flex-direction: column; flex: 1; }
+
+    .shop-name {
+        font-family: 'Poppins';
+        font-size: 22px;
+        font-weight: 700;
+        color: white;
+    }
+
+    .shop-desc {
+        font-family: 'Poppins';
+        font-size: 15px;
+        color: #aaa;
+    }
+
+    .buy-btn {
+        background-color: #fcc051;
+        color: #3a1f04;
+        border: none;
+        border-radius: 10px;
+        padding: 10px 20px;
+        font-size: 20px;
+        font-weight: 900;
+        cursor: pointer;
+    }
+
+    .buy-btn:hover { filter: brightness(1.2); }
+
+    .owned-tag {
+        font-family: 'Poppins';
+        font-size: 18px;
+        font-weight: 700;
+        color: #51fcc0;
+    }
+
+    .close-btn {
+        background-color: #555;
+        color: white;
+        border: none;
+        border-radius: 10px;
+        padding: 12px 40px;
+        font-size: 20px;
+        font-weight: 700;
+        cursor: pointer;
+        margin-top: 10px;
+        flex-shrink: 0; 
+    }
+
+    .close-btn:hover { filter: brightness(1.3); }
+
+</style>
+
+@code {
+    [Property] public bool IsOpen { get; set; } = false;
+
+    public void Open()  { IsOpen = true;  Mouse.Visible = true;  StateHasChanged(); }
+    public void Close() { IsOpen = false; Mouse.Visible = false; StateHasChanged(); }
+
+    //incluye todos los tipos de items
+    List<ItemResource> GetShopItems() =>
+        ResourceLibrary.GetAll<ItemResource>()
+            .ToList(); 
+
+    ItemInventory GetInventory() =>
+        Scene.GetAllComponents<ItemInventory>().FirstOrDefault();
+
+   void TryBuy(ItemResource item)
+	{
+		var inv = GetInventory();
+		if (inv == null) return;
+
+		bool success = inv.Buy(item);
+		if (success)
+			Scene.GetAllComponents<Artun2.TutorialController>().FirstOrDefault()?.OnItemBought();
+		else
+			Log.Warning($"[Shop] No se pudo comprar {item.Name} (sin dinero o ya tienes)");
+
+		StateHasChanged();
+	}
+
+    protected override int BuildHash()
+    {
+        var inv = GetInventory();
+        return System.HashCode.Combine(IsOpen, inv?.OwnedItems.Count);
+    }
+}

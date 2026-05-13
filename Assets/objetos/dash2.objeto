@@ -1,0 +1,15 @@
+{
+  "Name": "Sobreesfuerzo mecanico II",
+  "Description": "Una mejora del objeto inicial, con esto te desplazaras aun mas rapido cuando lo necesites",
+  "IconPath": "textures/items/speed.png",
+  "Price": 200,
+  "Type": "Dash",
+  "MaxDurability": 10,
+  "SprintSpeedMultiplier": 2.2,
+  "SprintDuration": 2.2,
+  "CaptureBoostAmount": 0.25,
+  "RechargeTime": 4,
+  "AreaMultiplier": 1,
+  "__references": [],
+  "__version": 0
+}

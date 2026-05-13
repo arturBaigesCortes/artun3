@@ -1,0 +1,86 @@
+@using Sandbox;
+@using Sandbox.UI;
+@using System.Linq;
+@inherits PanelComponent
+@namespace Sandbox
+
+<root class="karma-hud">
+    <div class="karma-container">
+        <img src="@GetKarmaIcon()" class="karma-icon-img" />
+        <label class="karma-amount @GetKarmaClass()">@GetKarmaDisplay()</label>
+    </div>
+</root>
+
+<style>
+    .karma-hud {
+        position: absolute;
+        top: 30px;
+        /* Se ha movido más a la izquierda (antes 200px) */
+        right: 450px; 
+        z-index: 500;
+        pointer-events: none;
+    }
+
+    .karma-container {
+        background-color: rgba(0, 0, 0, 0.75);
+        border: 3px solid #aaaaaa;
+        border-radius: 14px;
+        padding: 10px 22px;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+
+    .karma-icon-img {
+        width: 32px;
+        height: 32px;
+        object-fit: contain;
+    }
+
+    .karma-amount {
+        font-family: 'Poppins';
+        font-size: 30px;
+        font-weight: 900;
+        text-shadow: 2px 2px 0px black;
+    }
+
+    .karma-positive { color: #51fcc0; }
+    .karma-neutral  { color: #aaaaaa; }
+    .karma-negative { color: #ff5555; }
+</style>
+
+@code {
+    KarmaManager GetKarma() => Scene.GetAllComponents<KarmaManager>().FirstOrDefault();
+
+    string GetKarmaDisplay()
+    {
+        var k = GetKarma();
+        if (k == null || !k.IsActive) return "???";
+        int val = k.Karma;
+        return val > 0 ? $"+{val}" : $"{val}";
+    }
+
+    string GetKarmaIcon()
+    {
+        var k = GetKarma();
+        // Rutas basadas en tu estructura de carpetas: textures/items/
+        if (k == null || !k.IsActive) return "textures/items/quiestion.png";
+        if (k.Karma >= 5)  return "textures/items/pez_corazon.png";
+        if (k.Karma > 0)   return "textures/items/buda.png";
+        if (k.Karma == 0)  return "textures/items/balanza.png";
+        if (k.Karma >= -4) return "textures/items/hook.png";
+        return "textures/items/noFish.png";
+    }
+
+    string GetKarmaClass()
+    {
+        var k = GetKarma();
+        if (k == null || !k.IsActive) return "karma-neutral";
+        if (k.Karma > 0) return "karma-positive";
+        if (k.Karma < 0) return "karma-negative";
+        return "karma-neutral";
+    }
+
+    protected override int BuildHash() =>
+        System.HashCode.Combine(GetKarma()?.Karma, GetKarma()?.IsActive);
+}

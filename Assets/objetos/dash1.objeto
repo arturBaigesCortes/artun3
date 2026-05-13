@@ -1,0 +1,15 @@
+{
+  "Name": "Sobreesfuerzo mecanico",
+  "Description": "Puedes forzar el puntero durante un tiempo determinado a desplazarse mas rapido",
+  "IconPath": "textures/items/speed.png",
+  "Price": 130,
+  "Type": "Dash",
+  "MaxDurability": 10,
+  "SprintSpeedMultiplier": 1.5,
+  "SprintDuration": 1.5,
+  "CaptureBoostAmount": 0.25,
+  "RechargeTime": 4,
+  "AreaMultiplier": 1,
+  "__references": [],
+  "__version": 0
+}

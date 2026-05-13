@@ -1,0 +1,15 @@
+{
+  "Name": "Boton de emergencia",
+  "Description": "Un aparato semiáutomatico con el que podrás capturar una parte del pez con solo pulsarlo",
+  "IconPath": "textures/items/botonrojo.png",
+  "Price": 250,
+  "Type": "CaptureBoost",
+  "MaxDurability": 10,
+  "SprintSpeedMultiplier": 1.8,
+  "SprintDuration": 2,
+  "CaptureBoostAmount": 0.25,
+  "RechargeTime": 7,
+  "AreaMultiplier": 1.5,
+  "__references": [],
+  "__version": 0
+}
